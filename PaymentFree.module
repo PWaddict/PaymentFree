@@ -1,0 +1,118 @@
+<?php namespace ProcessWire;
+
+class PaymentFree extends PaymentModule {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'FREE Orders',
+			'version' => '1.0.0',
+			'summary' => 'Module to accept FREE orders for digital giveaways.',
+			'singular' => false,
+			'autoload' => false,
+			'requires' => 'PaymentModule',
+			'author' => 'PWaddict',
+			'icon' => 'shopping-cart'
+		);
+	}
+
+	static public function getDefaultData() {
+		return array(
+			"formId" => "checkout-free-form",
+			"ajax" => 0,
+			"ajaxId" => "",
+			"buttonHTML" => "<input type='submit' value='Complete Order'/>"
+		);
+	}
+
+	public function init() {
+		$this->currency = $this->defaultCurrency;
+	}
+
+	public function getTitle() {
+		return $this->_("FREE");
+	}
+
+	public function processPayment() {
+		return true;
+	}
+
+	public function render() {
+
+		if ($this->wire('languages')) {
+			$userLanguage = $this->wire('user')->language;
+			$lang = $userLanguage->isDefault() ? '' : "__$userLanguage->id";
+		}
+		else {
+			$lang = '';
+		}
+
+		if ($this->data['ajax']) {
+			$form = "<form id='{$this->formId}'>" . ($this->data['buttonHTML' . $lang] ? $this->data['buttonHTML' . $lang] : $this->data['buttonHTML']) . "</form>
+			<script>
+			document.getElementById('{$this->formId}').addEventListener('submit', function (e) {
+
+			  e.preventDefault();
+			  var xhr = new XMLHttpRequest();
+			  xhr.open('GET', '{$this->processUrl}', true);
+
+			  xhr.onreadystatechange = function () {
+			    document.getElementById('{$this->ajaxId}').innerHTML = this.responseText;
+			  };
+
+			  xhr.send();
+			});
+			</script>";
+		}
+		else {
+			$form = "<form id='{$this->formId}' action='{$this->processUrl}'" . ($this->data['buttonHTML' . $lang] ? $this->data['buttonHTML' . $lang] : $this->data['buttonHTML']) . "</form>";
+		}
+
+		return $form;
+
+	}
+
+	public static function getModuleConfigInputfields(array $data) {
+		$data = array_merge(self::getDefaultData(), $data);
+		$inputfields = new InputfieldWrapper();
+		$modules = wire('modules');
+
+		$f = $modules->get('InputfieldText');
+		$f->name = 'formId';
+		$f->label = __("Form ID");
+		$f->description = __("ID attached to dynamically generated form element.");
+		$f->required = 1;
+		$f->columnWidth = 33;
+		if(isset($data['formId'])) $f->value = $data['formId'];
+		$inputfields->add($f);
+
+		$f = $modules->get('InputfieldCheckbox');
+		$f->attr('name+id', 'ajax');
+		$f->label = __('AJAX Checkout');
+		$f->description = __("IMPORTANT: Enable this option ONLY if your checkout process is already using AJAX in order to display the success page via AJAX too.");
+		$f->columnWidth = 33;
+		$f->attr('checked', isset($data['ajax']) && $data['ajax'] ? 'checked' : '' );
+		$inputfields->add($f);
+
+		$f = $modules->get('InputfieldText');
+		$f->name = 'ajaxId';
+		$f->label = __("AJAX Checkout Div ID");
+		$f->description = __("Add your div ID you're using to output the AJAX checkout content.");
+		$f->showIf = "ajax=1";
+		$f->required = 1;
+		$f->columnWidth = 34;
+		if(isset($data['ajaxId'])) $f->value = $data['ajaxId'];
+		$inputfields->add($f);
+
+		$f = $modules->get('InputfieldTextarea');
+		$f->name = 'buttonHTML';
+		$f->label = __("HTML Button");
+		$f->description = __("Modify the HTML of the button that completes the order.");
+		$f->required = 1;
+		$f->columnWidth = 100;
+		$f->useLanguages = true;
+		if(isset($data['buttonHTML'])) $f->value = $data['buttonHTML'];
+		$inputfields->add($f);
+
+		return $inputfields;
+	}
+}
