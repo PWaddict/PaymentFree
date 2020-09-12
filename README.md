@@ -37,6 +37,10 @@ DO NOT select this module as payment method in PaymentModule settings.
 
 ## Changelog
 
+### 1.0.1 (12 September 2020)
+
+- Fixed missing closing tag on the non-ajax form
+
 ### 1.0.0 (23 October 2018)
 
 - Initial release
