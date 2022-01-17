@@ -5,7 +5,7 @@ class PaymentFree extends PaymentModule {
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'FREE Orders',
-			'version' => '1.0.1',
+			'version' => '1.0.2',
 			'summary' => 'Module to accept FREE orders for digital giveaways.',
 			'singular' => false,
 			'autoload' => false,
@@ -18,9 +18,10 @@ class PaymentFree extends PaymentModule {
 	static public function getDefaultData() {
 		return array(
 			"formId" => "checkout-free-form",
+			"buttonHTML" => "<input type='submit' value='Complete Order'/>",
 			"ajax" => 0,
 			"ajaxId" => "",
-			"buttonHTML" => "<input type='submit' value='Complete Order'/>"
+			"ajaxCustomJavaScript" => "",
 		);
 	}
 
@@ -57,6 +58,7 @@ class PaymentFree extends PaymentModule {
 
 			  xhr.onreadystatechange = function () {
 			    document.getElementById('{$this->ajaxId}').innerHTML = this.responseText;
+					{$this->ajaxCustomJavaScript}
 			  };
 
 			  xhr.send();
@@ -85,6 +87,16 @@ class PaymentFree extends PaymentModule {
 		if(isset($data['formId'])) $f->value = $data['formId'];
 		$inputfields->add($f);
 
+		$f = $modules->get('InputfieldTextarea');
+		$f->name = 'buttonHTML';
+		$f->label = __("HTML Button");
+		$f->description = __("Modify the HTML of the button that completes the order.");
+		$f->required = 1;
+		$f->columnWidth = 67;
+		$f->useLanguages = true;
+		if(isset($data['buttonHTML'])) $f->value = $data['buttonHTML'];
+		$inputfields->add($f);
+
 		$f = $modules->get('InputfieldCheckbox');
 		$f->attr('name+id', 'ajax');
 		$f->label = __('AJAX Checkout');
@@ -99,18 +111,18 @@ class PaymentFree extends PaymentModule {
 		$f->description = __("Add your div ID you're using to output the AJAX checkout content.");
 		$f->showIf = "ajax=1";
 		$f->required = 1;
-		$f->columnWidth = 34;
+		$f->columnWidth = 67;
 		if(isset($data['ajaxId'])) $f->value = $data['ajaxId'];
 		$inputfields->add($f);
 
 		$f = $modules->get('InputfieldTextarea');
-		$f->name = 'buttonHTML';
-		$f->label = __("HTML Button");
-		$f->description = __("Modify the HTML of the button that completes the order.");
-		$f->required = 1;
+		$f->name = 'ajaxCustomJavaScript';
+		$f->label = __("Additional Custom JavaScript (AJAX)");
+		$f->description = __("Additional custom JavaScript executed if the transaction is completed while AJAX Checkout enabled.");
+		$f->notes = __("**IMPORTANT**: Use this field ONLY if you know what you're doing.");
+		$f->showIf = "ajax=1";
 		$f->columnWidth = 100;
-		$f->useLanguages = true;
-		if(isset($data['buttonHTML'])) $f->value = $data['buttonHTML'];
+		if(isset($data['ajaxCustomJavaScript'])) $f->value = $data['ajaxCustomJavaScript'];
 		$inputfields->add($f);
 
 		return $inputfields;
